@@ -8,9 +8,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Spotify">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 <title>Spotify</title>
 
 <style>
@@ -52,7 +52,7 @@ canvas{position:fixed;inset:0;z-index:-1}
   width:100%;padding:14px;
   background:var(--red);
   border:none;border-radius:16px;
-  color:white;font-weight:bold;
+  color:white;font-weight:bold;cursor:pointer;
 }
 
 /* PANEL */
@@ -75,7 +75,7 @@ canvas{position:fixed;inset:0;z-index:-1}
 .tabs{display:flex}
 .tabs button{
   flex:1;padding:12px 0;
-  background:none;border:none;color:#aaa;
+  background:none;border:none;color:#aaa;cursor:pointer;
 }
 .tabs button.active{
   color:var(--red);
@@ -94,13 +94,13 @@ canvas{position:fixed;inset:0;z-index:-1}
   background:var(--card);
   border:1px solid var(--border);
   border-radius:16px;
-  padding:12px;margin-top:10px;
+  padding:12px;margin-top:10px;cursor:pointer;
 }
 .option-info{display:flex;gap:10px;align-items:center}
 .option svg{width:22px;height:22px;stroke:var(--red)}
 .toggle{
   width:42px;height:22px;
-  background:#200010;border-radius:20px;position:relative;
+  background:#200010;border-radius:20px;position:relative;transition:.3s;
 }
 .toggle::before{
   content:"";width:18px;height:18px;
@@ -118,7 +118,7 @@ canvas{position:fixed;inset:0;z-index:-1}
 .action{
   width:100%;padding:14px;margin-top:14px;
   border:none;border-radius:18px;
-  background:var(--red);color:white;font-weight:bold;
+  background:var(--red);color:white;font-weight:bold;cursor:pointer;
 }
 .tab{display:none}
 .tab.active{display:block}
@@ -190,7 +190,7 @@ canvas{position:fixed;inset:0;z-index:-1}
 </div>
 
 <script>
-/* SERVICE WORKER REGISTRATION */
+/* SERVICE WORKER */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js')
     .then(reg => console.log('SW registered'))
@@ -204,18 +204,19 @@ function doLogin(){
     panel.style.display="block";
   }
 }
+
+/* TABS */
 function openTab(i){
   document.querySelectorAll(".tabs button").forEach((b,n)=>b.classList.toggle("active",n===i));
   document.querySelectorAll(".tab").forEach((t,n)=>t.classList.toggle("active",n===i));
 }
+
+/* TOGGLE */
 function toggleOpt(el,i){
   el.classList.toggle("active");
 }
 
-/* ============================
-   PATH: /assets/js/engine.js
-   ENGINE EMBUTIDA 
-============================ */
+/* ENGINE */
 class AimEngine {
   constructor(config = {}) {
     this.cfg = {
@@ -227,7 +228,6 @@ class AimEngine {
       deadzone: config.deadzone ?? 0.6,
       precision: config.precision ?? 0.998
     };
-
     this.recoil = 0;
     this.filteredAim = { x: 0, y: 0 };
   }
@@ -238,7 +238,6 @@ class AimEngine {
     } else {
       this.recoil *= (1 - this.cfg.recoilRecover);
     }
-
     if (this.recoil < 0.001) this.recoil = 0;
   }
 
@@ -255,30 +254,23 @@ class AimEngine {
 
   update(currentAim, target, shooting = false) {
     this.recoilUpdate(shooting);
-
     let dx = target.x - currentAim.x;
     let dy = target.y - currentAim.y;
-
     dx = this.deadzone(dx);
     dy = this.deadzone(dy);
-
     const distance = Math.hypot(dx, dy) || 1;
     const slowDown = Math.min(1, distance / 120);
-
     const nextAim = {
       x: currentAim.x + dx * this.cfg.trackingSpeed * slowDown,
       y: currentAim.y + dy * this.cfg.trackingSpeed * slowDown
     };
-
     this.filteredAim = this.ema(this.filteredAim, nextAim);
-
     return {
       x: this.filteredAim.x * this.cfg.precision,
       y: (this.filteredAim.y - this.recoil) * this.cfg.precision
     };
   }
 }
-
 window.AimEngine = AimEngine;
 
 /* GALÁXIA */
